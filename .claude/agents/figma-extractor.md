@@ -1,7 +1,7 @@
 ---
 name: figma-extractor
 description: Extract a Figma email design into a structured JSON spec. Invoked by the /email slash command (or directly) with desktop URL, mobile URL, and email name. Owns Phases 0–3d of the extraction workflow. Calls the figma-interpret skill for ambiguous judgment moments rather than loading the full reference into context.
-tools: Read, Write, Edit, Bash, Glob, Grep, Skill, mcp__figma__get_screenshot, mcp__figma__get_metadata, mcp__figma__get_design_context, mcp__figma__get_variable_defs
+tools: Agent, Read, Write, Edit, Bash, Glob, Grep, Skill, mcp__figma__get_screenshot, mcp__figma__get_metadata, mcp__figma__get_design_context, mcp__figma__get_variable_defs
 ---
 
 # figma-extractor
@@ -65,91 +65,61 @@ Write everything to `emails/{name}/pre-scan.md`. Later phases read this file, no
 1. **Brand and structural colors.** Map hex to named tokens.
 2. **Scaffolding markers.** Tokens named `Variable`/`Annotation`/`Placeholder`/`Marker`/`Dynamic`, out-of-palette saturated values, square-bracket characters in those colors. If found, add to `annotations.stripColors` (and `recolorMap` where appropriate). If unsure, call `figma-interpret`.
 
-## Phase 3a — Per-section data (JSX + per-section screenshot)
+## Phase 3 — Spawn section subagents (parallel)
 
-For each section in pre-scan order:
+Read `emails/{name}/pre-scan.md` to get the full section list with node IDs and verbatim/ambiguity flags.
 
-1. `Figma:get_design_context(nodeId=<desktop section id>)` → `emails/{name}/jsx/section-{N}-desktop.jsx`. Strip the trailing `SUPER CRITICAL` block Figma appends.
-2. Same for mobile → `section-{N}-mobile.jsx`. **Always both breakpoints.**
-3. `Figma:get_screenshot(nodeId=<desktop section id>)` with `maxDimension` = section height → `section-{N}-desktop.png`.
-4. Same for mobile.
+For each section, assess:
+- **`verbatim`**: true for sections containing regulated/legal copy (ISI, indications, references, legal footer).
+- **`needsScreenshot`**: true only for sections where the full-frame Phase 0 view is insufficient to determine structure (overlapping elements, unclear column layout, novel patterns). Default false — most sections are readable from JSX alone.
 
-Base64 decode pattern when CDN is blocked:
+Spawn **all section subagents in a single response** (one `Agent` tool call per section, all in parallel). Each call targets `figma-section-extractor` with this prompt:
 
-```bash
-python3 -c "import base64,sys; open(sys.argv[2],'wb').write(base64.b64decode(open(sys.argv[1]).read()))"
+```
+fileKey: {fileKey}
+sectionNumber: {N}
+desktopNodeId: {id}
+mobileNodeId: {id}
+sectionName: {name from pre-scan}
+verbatim: {true|false}
+needsScreenshot: {true|false}
+workDir: emails/{name}
 ```
 
-Do NOT run the Tailwind resolver, author JSON, or start the plan during 3a. Only goal: every section's JSX + screenshots on disk.
+Wait for all subagents to complete before proceeding to Phase 4. Each subagent writes:
+- `emails/{name}/jsx/section-{N}-desktop.jsx` + `.inlined.jsx`
+- `emails/{name}/jsx/section-{N}-mobile.jsx` + `.inlined.jsx`
+- `emails/{name}/section-{N}-plan.md`
+- `emails/{name}/section-{N}.jsonl`
 
-## Phase 3b — Resolve Tailwind (one command)
-
-```bash
-bash .claude/scripts/resolve-tailwind.sh emails/{name}/jsx
-```
-
-Produces `emails/{name}/jsx/decoded.css` and one `section-{N}-{breakpoint}.inlined.jsx` per input. Watch stderr for an `unresolved classes` count. Capture each as a `meta.openQuestions` entry during planning — these are usually Tailwind v4-only mask classes on SVG internals and don't change email-level rendering.
-
-From here on, only `.inlined.jsx` files are read. Never re-decode Tailwind from source `.jsx`.
-
-## Phase 3c — Judgment plan (`emails/{name}/plan.md`)
-
-**Lock in every interpretive decision in one pass.** Phase 3d is mechanical execution against this plan.
-
-For each section, write a plan entry covering:
-
-1. **Section identity** — number, name, node IDs, dimensions.
-2. **Visual summary** from per-section screenshots — 1–2 sentences at each breakpoint.
-3. **Structural pattern** — single-layer (root has bg + padding), intermediate container (outer padding wrapping inner bg + padding), or no-wrapper. Determined from the inlined JSX root carrying `data-node-id="{section id}"`.
-4. **Primitive sequence** — ordered list. Mapping from inlined JSX:
-   - `<img>` → `image`
-   - text element → `textBlock` (preserve verbatim)
-   - `<a>` whose child has `background` + `padding` + `color` → `button`
-   - Repeating bullet+text rows → `list`
-   - `<div>` with `display:flex` (no `flexDirection: column`) and multiple `<div>` children → `multiColumn`
-   - `<br>` or empty vertical gap → `spacer`
-   - Thin colored bar between columns → `borderLeft`/`borderRight` on the adjacent column, NOT its own primitive
-5. **Judgment decisions** — explicit answer to each applicable judgment call. When unsure, call the `figma-interpret` skill with a focused question and record the returned rule here.
-6. **Mobile deltas** — what's different at mobile, compared from desktop `.inlined.jsx` vs mobile `.inlined.jsx` plus the two screenshots.
-7. **Open questions** — anything unresolvable from available inputs. Will land in `meta.openQuestions`.
-
-**Always-apply rules** (no need to call the skill for these):
-
-- **Overlay rule.** Decorative element overlapping any other element → model only the base element at its full container dimensions; add a blocking `meta.openQuestions` entry telling production to bake the overlay into the source asset. Never model overlays as adjacent multiColumn siblings.
-- **Section background hygiene.** If a child has the same background as the section, omit it from the child's JSON.
-- **Ignore Figma artifacts.** `alignContent: stretch`, `minWidth: 1px`, `position: relative` without absolute children, `overflow: clip/hidden`, `whiteSpace: nowrap` on isolated blocks — no rendering effect.
-- **Default `mobile.preserveWidth: true`.** Only `false` for confirmed fluid elements (full-width hero, full-width CTA).
-
-Skim the plan end to end before 3d. If anything is incomplete, fix it before authoring JSON.
-
-## Phase 3d — Author JSON (mechanical execution)
-
-For each section in plan order:
-
-1. Open the plan entry.
-2. Read `emails/{name}/jsx/section-{N}-desktop.inlined.jsx` (and `.mobile.inlined.jsx`). Every `style={{...}}` block is fully resolved CSS — read property values directly. **Do NOT re-decode Tailwind.**
-3. Emit the primitives the plan specifies, in the order it specifies, applying the recorded judgment decisions. Pull exact values from the inlined JSX.
-4. Per-side padding → JSON object. Inlined JSX has `paddingTop/Right/Bottom/Left` keys; merge into a single `padding: {top, right, bottom, left}` object.
-5. Append to the scratch JSONL:
-   ```bash
-   echo '{"id":"section-N","name":"...","nodes":[...]}' >> emails/{name}/sections.jsonl
-   ```
-
-If a decision feels wrong while authoring, stop, update the plan in 3c, then resume. Never drift mid-section.
+If a subagent reports it could not produce a JSONL record, fix the specific section by re-invoking that subagent with the error context before proceeding. Do not block the whole batch for one failure.
 
 ## Phase 4 — Compose and validate
 
+Assemble `plan.md` from per-section plan files in order:
+
+```bash
+for i in $(seq 1 {N}); do cat emails/{name}/section-$i-plan.md; echo; done > emails/{name}/plan.md
+```
+
+Then compose `spec.json` from the per-section JSONL files:
+
 ```bash
 python3 -c "
-import json
-sections = [json.loads(line) for line in open('emails/{name}/sections.jsonl')]
+import json, glob, os
+work = 'emails/{name}'
+n = {section_count}
+sections = []
+for i in range(1, n+1):
+    path = os.path.join(work, f'section-{i}.jsonl')
+    sections.append(json.loads(open(path).read().strip()))
 spec = {
   'specVersion': '2.0.0',
   'meta': { ... },
   'annotations': { ... },
   'sections': sections,
 }
-json.dump(spec, open('emails/{name}/spec.json', 'w'), indent=2)
+json.dump(spec, open(os.path.join(work, 'spec.json'), 'w'), indent=2)
 "
 ```
 
