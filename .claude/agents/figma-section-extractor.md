@@ -23,11 +23,23 @@ The following files are already on disk:
 
 ## Step 1 — Read all context up front
 
-Read `pre-scan.md` and both inlined JSX files (or all per-section inlined files in fallback mode). Every `style={{...}}` block is fully resolved CSS — read property values directly. Do NOT read source `.jsx` files (only the `.inlined.jsx` versions).
+Read these files **in order** before doing anything else:
+
+1. `.claude/skills/figma-interpret/references/json-format.md` — authoritative primitive field-shape reference. You MUST read this before drafting spec.json. Do not guess primitive shapes from memory.
+2. `{workDir}/pre-scan.md`
+3. `{workDir}/jsx/desktop-frame.inlined.jsx`
+4. `{workDir}/jsx/mobile-frame.inlined.jsx` (or all per-section inlined files in fallback mode)
+
+Every `style={{...}}` block in the inlined JSX is fully resolved CSS — read property values directly. Do NOT read source `.jsx` files (only the `.inlined.jsx` versions).
 
 Walk the inlined desktop frame JSX section by section by locating each `data-node-id="40000030:42N"` boundary. Pair each desktop section with its mobile counterpart (same visual order; node IDs come from `pre-scan.md` and the JSX itself).
 
+After reading, run: `Bash("echo \"$(date -u +%H:%M:%SZ) [extractor] step-1-read-complete\" >> {workDir}/progress.log")`
+
 ## Step 2 — Write `{workDir}/plan.md`
+
+After writing plan.md, run: `Bash("echo \"$(date -u +%H:%M:%SZ) [extractor] step-2-plan-written\" >> {workDir}/progress.log")`
+
 
 One file, all sections in order. For each section cover:
 
@@ -106,6 +118,8 @@ Shape:
 ```
 
 The post-write hook auto-validates `spec.json` via `validate-spec.py`. Fix any reported errors before returning.
+
+After spec.json is valid, run: `Bash("echo \"$(date -u +%H:%M:%SZ) [extractor] step-3-spec-valid\" >> {workDir}/progress.log")`
 
 ## Output
 

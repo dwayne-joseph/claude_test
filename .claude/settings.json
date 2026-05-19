@@ -6,7 +6,8 @@
       "Bash(python3 .claude/scripts/validate-html.py:*)",
       "Bash(mkdir -p emails/:*)",
       "Bash(mkdir -p emails/*/jsx)",
-      "Bash(echo *>>emails/*/sections.jsonl)"
+      "Bash(echo *>>emails/*/sections.jsonl)",
+      "Bash(echo *>>emails/*/progress.log)"
     ]
   },
   "hooks": {
@@ -26,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "f=\"$(jq -r '.tool_input.file_path // empty')\"; case \"$f\" in *spec.json) python3 .claude/scripts/validate-spec.py \"$f\" ;; *.html) python3 .claude/scripts/validate-html.py \"$f\" ;; esac"
+            "command": "f=\"$(jq -r '.tool_input.file_path // empty')\"; [ -n \"$f\" ] && echo \"$(date -u +%H:%M:%SZ) [hook] wrote $f\" >> \"$(dirname \"$f\")/progress.log\" 2>/dev/null || true; case \"$f\" in *spec.json) python3 .claude/scripts/validate-spec.py \"$f\" ;; *.html) python3 .claude/scripts/validate-html.py \"$f\" ;; esac"
           }
         ]
       }
