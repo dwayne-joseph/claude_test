@@ -16,14 +16,17 @@ You own the Figma → JSON extraction. Your input is a desktop Figma URL, a mobi
 
 Extract `fileKey` and `nodeId` from each URL. Convert `-` to `:` in nodeIds.
 
-## Context discipline (read before Phase 0)
+## Start immediately
 
-These rules exist because this agent has the largest context footprint in the workflow. Breaking them blows the budget and makes Phase 3d unreliable.
+**Your first tool call must be `Figma:get_screenshot` on the desktop frame. Do not read any files, check any configuration, or call any skill before this.** Figma tools are pre-configured and available — call them directly.
 
-1. **Do NOT read `references/json-format.md` upfront.** When you hit a judgment moment, call the `figma-interpret` skill with a focused question. It returns the relevant rule + JSON shape without loading the 18KB reference into your context.
-2. **Do NOT request base64 screenshots for every section.** Phase 0 (full email, both breakpoints) only. Per-section screenshots are not taken — section subagents work from inlined JSX.
-3. **Do NOT write a generator script** (no `build_spec.py`, no `emit_section.py`). Author JSON via the JSONL → `python3 -c` compose pattern in Phase 4. Generators add a buggy abstraction layer and hide judgment from review.
-4. **Per-section, not per-frame.** Always call `get_design_context` on each section node, never the whole frame — frame-level returns get truncated.
+## Context discipline
+
+1. **Do NOT read any existing `emails/` directories.** Never copy or reference JSX, spec, or plan files from other email runs (e.g. `emails/tzield-v1/`). Every extraction fetches fresh data from Figma.
+2. **Do NOT read `references/json-format.md` upfront.** When you hit a judgment moment, call the `figma-interpret` skill with a focused question. It returns the relevant rule + JSON shape without loading the 18KB reference into your context.
+3. **Do NOT request base64 screenshots for every section.** Phase 0 (full email, both breakpoints) only. Per-section screenshots are not taken — section subagents work from inlined JSX.
+4. **Do NOT write a generator script** (no `build_spec.py`, no `emit_section.py`). Author JSON via the JSONL → `python3 -c` compose pattern in Phase 4. Generators add a buggy abstraction layer and hide judgment from review.
+5. **Per-section, not per-frame.** Always call `get_design_context` on each section node, never the whole frame — frame-level returns get truncated.
 
 ## Working directory
 
@@ -67,12 +70,13 @@ Write everything to `emails/{name}/pre-scan.md`. Later phases read this file, no
 
 ## Phase 3a — Per-section JSX (no screenshots)
 
-For each section in pre-scan order:
+For each section, call desktop and mobile `get_design_context` **in the same response** (parallel). Work through all sections before moving to Phase 3b.
 
-1. `Figma:get_design_context(nodeId=<desktop section id>)` → `emails/{name}/jsx/section-{N}-desktop.jsx`. Strip the trailing `SUPER CRITICAL` block Figma appends.
-2. Same for mobile → `section-{N}-mobile.jsx`.
+Per section:
+1. `Figma:get_design_context(nodeId=<desktop section id>)` → `emails/{name}/jsx/section-{N}-desktop.jsx`
+2. `Figma:get_design_context(nodeId=<mobile section id>)` → `emails/{name}/jsx/section-{N}-mobile.jsx`
 
-Do NOT take per-section screenshots here — the Phase 0 full-frame view is sufficient for most sections, and section subagents handle any ambiguity in their plan step.
+Both calls in one response, then write both files, then move to the next section. Strip the trailing `SUPER CRITICAL` block Figma appends to each. If Phase 1 identified any mobile-only sections, fetch those too.
 
 ## Phase 3b — Resolve Tailwind (one command)
 
