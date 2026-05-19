@@ -24,11 +24,19 @@ The flow is therefore:
 - **`scripts/resolve-tailwind.sh`** does the mechanical Tailwind decoding: runs the real Tailwind CLI over every section's JSX once, then rewrites each `className="..."` as a fully-resolved `style={{...}}` block. The output is an `.inlined.jsx` file per section with every CSS property already computed.
 - **Claude** does the visual interpretation and judgment: identifying structural patterns from screenshots, classifying overlays, transcribing verbatim text, naming columns, deciding mobile behavior, locking in decisions in a written plan.
 
-The skill assumes the Tailwind CLI is available at the path resolved by `resolve-tailwind.sh`. If that dependency disappears, the script fails loudly — there is no fallback to inline decoding. If the CLI isn't available, use the original `figma-to-json` skill instead.
+The skill assumes the Tailwind CLI is available via one of: a `TAILWIND_CLI` env-var override, the web-Claude bundled path (`@mermaid-js/mermaid-cli`'s tailwindcss), `tailwindcss` on `PATH`, or `npx -y tailwindcss@3.4`. `resolve-tailwind.sh` tries them in that order and only fails if none work. If none are available, fall back to the original `figma-to-json` skill (inline decoding).
 
 ## Working directory
 
 Throughout this skill, `{work}` refers to a per-email working directory. On Claude Code locally, use `./emails/{email-name}/`. On the web sandbox, use `/home/claude/{email-name}/`. The final spec is written to `{outputs}/` — locally `./emails/{email-name}/`, on web `/mnt/user-data/outputs/`. Pick the appropriate paths once at the start and use them consistently.
+
+## Environment quirks (read once before Phase 0)
+
+**Screenshot resolution.** The Figma MCP's `get_screenshot` tool caps the *longer edge* at `maxDimension`. Emails are narrow and very tall (typical 600×4000+). A small `maxDimension` (e.g. 1200) on a tall email scales the width below readability — a 600×4200 email rendered at `maxDimension: 1200` returns a 178×1200 image, with every line of text unreadable. The rule: for a full-email screenshot, pass `maxDimension` equal to the email's height (or higher) so the width returns at native resolution. For a per-section screenshot, native resolution is usually small enough — pass `maxDimension` equal to the section's height. Don't reuse a fixed value across sizes.
+
+**Sandboxed environments may block the Figma asset CDN.** `get_screenshot` returns a short-lived `https://www.figma.com/api/mcp/asset/...` URL. In Claude Code's managed remote execution environment (and any container with an outbound-host allowlist), this URL may return `403 host_not_allowed`. In those environments, pass `enableBase64Response: true` to receive the PNG inline. The trade-off is token cost (every screenshot lives in chat context), so reserve it for the screenshots you actually need to look at: Phase 0 full-email shots, and Phase 3a per-section shots for the visually-ambiguous sections. Don't request base64 for sections whose JSX already tells you everything.
+
+**Saving screenshots to disk.** When base64 is required (above), `curl` to the Figma URL will fail. Either decode the base64 in-process (`python3 -c "import base64; ..."`) and write the bytes, or accept that screenshots live in chat context and skip the per-file save. Inlined-JSX files and the pre-scan / plan markdown still go to disk normally.
 
 ---
 
@@ -49,7 +57,7 @@ Six phases. Don't skip them — each catches a class of errors the next can't de
 
 ### Phase 0 — Visual scan (MANDATORY, FIRST)
 
-Before any metadata or JSX, **look at the email**. Call `Figma:get_screenshot` on both the desktop frame and the mobile frame at `maxDimension: 1200`. Open both screenshots.
+Before any metadata or JSX, **look at the email**. Call `Figma:get_screenshot` on both the desktop frame and the mobile frame. Pass `maxDimension` equal to the frame's height (or larger) so the width returns at native resolution — see *Environment quirks* above for why a small `maxDimension` makes tall emails unreadable. In sandboxed environments where the Figma asset CDN is blocked, also pass `enableBase64Response: true` to receive the PNG inline. Open both screenshots.
 
 Then narrate, in writing, what you see — this becomes the foundation of the pre-scan file:
 
@@ -66,8 +74,9 @@ Then narrate, in writing, what you see — this becomes the foundation of the pr
 Call `Figma:get_metadata` on both the desktop and mobile frame nodeIds. Use the metadata to map your visual inventory to concrete node IDs:
 
 1. **Pair each visual section to a node.** Match section N in your narration to its node ID at both breakpoints. Confirm 1:1 pairing; if section counts don't match, the visual scan already told you why.
-2. **Identify canvas-level siblings.** Nodes sitting OUTSIDE any section but inside the page — bracket frames, overlay bars, registration marks. Classify each as editorial scaffolding (skip in production) or visual overlay (handle per the overlay rule). You already saw these in Phase 0; metadata gives them IDs.
-3. **Repeated assets.** Same logo, icon, or image appearing in multiple sections. The JSON references one shared asset rather than duplicating the image primitive.
+2. **Cross-check section heights against the visual narration.** For each section, compare the metadata height to the content your Phase 0 narration says it contains. A 47px section can't hold a heading + a body paragraph + a button; a 500px section probably contains more than just a heading. When the numbers don't match the narration, the Phase 0 inventory has merged or split sections wrong — fix it now before committing the pre-scan, by re-reading the screenshots at the suspect boundary (or fetching a quick per-section screenshot of the suspect node). Catching boundary errors here is cheap; catching them in Phase 3a after JSX is fetched is wasted work.
+3. **Identify canvas-level siblings.** Nodes sitting OUTSIDE any section but inside the page — bracket frames, overlay bars, registration marks. Classify each as editorial scaffolding (skip in production) or visual overlay (handle per the overlay rule). You already saw these in Phase 0; metadata gives them IDs.
+4. **Repeated assets.** Same logo, icon, or image appearing in multiple sections. The JSON references one shared asset rather than duplicating the image primitive.
 
 **Write the pre-scan to disk immediately:**
 
@@ -138,8 +147,10 @@ For each section in the pre-scan inventory, in a loop:
 
 1. `Figma:get_design_context(nodeId=<desktop section id>)` → save JSX to `{work}/jsx/section-{N}-desktop.jsx` (omit the trailing `SUPER CRITICAL` instructions Figma appends).
 2. `Figma:get_design_context(nodeId=<mobile section id>)` → save to `{work}/jsx/section-{N}-mobile.jsx`. Always fetch both breakpoints.
-3. `Figma:get_screenshot(nodeId=<desktop section id>, maxDimension=1200)` → save to `{work}/jsx/section-{N}-desktop.png`.
-4. `Figma:get_screenshot(nodeId=<mobile section id>, maxDimension=600)` → save to `{work}/jsx/section-{N}-mobile.png`.
+3. `Figma:get_screenshot(nodeId=<desktop section id>)` with `maxDimension` set to the section's height from metadata (or higher) → save to `{work}/jsx/section-{N}-desktop.png`. Per-section screenshots are usually small enough that native resolution is fine.
+4. `Figma:get_screenshot(nodeId=<mobile section id>)` with `maxDimension` set the same way → save to `{work}/jsx/section-{N}-mobile.png`.
+
+In environments where the Figma asset CDN is blocked (see *Environment quirks*), pass `enableBase64Response: true` and the PNG arrives inline. To save inline base64 to disk, decode with `python3 -c "import base64,sys; open(sys.argv[2],'wb').write(base64.b64decode(open(sys.argv[1]).read()))"` — or skip the save and reference the screenshot directly from chat context during Phase 3c.
 
 The per-section screenshots are the visual ground truth Claude uses in Phase 3c. The full-email screenshot from Phase 0 was too small to see overlay placement, divider details, or per-section spacing precisely; per-section screenshots are.
 
@@ -159,9 +170,11 @@ Produces:
 - `{work}/jsx/decoded.css` — Tailwind-resolved stylesheet for every class used
 - `{work}/jsx/section-{N}-{breakpoint}.inlined.jsx` — JSX with `className="..."` replaced by `style={{...}}` blocks containing fully-resolved CSS properties
 
-Watch stderr for an `unresolved classes` count. Zero is expected. Any non-zero count: capture each unresolved class as a `meta.openQuestions` entry during planning.
+Watch stderr for an `unresolved classes` count. Zero is expected for normal Tailwind v3 classes. Tailwind v4-only classes (e.g. `mask-alpha`, `mask-intersect`, `mask-no-clip`, arbitrary `mask-*` variants) won't resolve under v3.4 — capture each unresolved class as a `meta.openQuestions` entry during planning. These usually appear only on SVG internals (logo mask layers) and don't change the email-level rendering, but flag them anyway.
 
-If the script exits non-zero, the Tailwind CLI is unavailable — fall back to the original `figma-to-json` skill.
+The script prints which Tailwind it found on the first stderr line — `using bundled Tailwind`, `using tailwindcss on PATH`, or `using npx tailwindcss@3.4`. The npx path downloads on first run and caches; subsequent runs are fast. If you want to pin a specific Tailwind binary, set `TAILWIND_CLI` env var to its path before invoking the script.
+
+If the script exits non-zero, no Tailwind is available — fall back to the original `figma-to-json` skill (inline decoding).
 
 This is the only time the resolver runs. From here on, only `.inlined.jsx` files are read.
 
