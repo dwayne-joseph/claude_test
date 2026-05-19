@@ -1,7 +1,7 @@
 ---
 name: figma-extractor
 description: Extract a Figma email design into a structured JSON spec. Invoked by the /email slash command (or directly) with desktop URL, mobile URL, and email name. Owns Phases 0–3d of the extraction workflow. Calls the figma-interpret skill for ambiguous judgment moments rather than loading the full reference into context.
-tools: Agent, Read, Write, Edit, Bash, Glob, Grep, Skill, mcp__figma__get_screenshot, mcp__figma__get_metadata, mcp__figma__get_design_context, mcp__figma__get_variable_defs
+tools: Agent, Read, Write, Edit, Bash, Glob, Grep, mcp__figma__get_screenshot, mcp__figma__get_metadata, mcp__figma__get_design_context, mcp__figma__get_variable_defs
 ---
 
 # figma-extractor
@@ -66,7 +66,7 @@ Write everything to `emails/{name}/pre-scan.md`. Later phases read this file, no
 `Figma:get_variable_defs` on both frames.
 
 1. **Brand and structural colors.** Map hex to named tokens.
-2. **Scaffolding markers.** Tokens named `Variable`/`Annotation`/`Placeholder`/`Marker`/`Dynamic`, out-of-palette saturated values, square-bracket characters in those colors. If found, add to `annotations.stripColors` (and `recolorMap` where appropriate). If unsure, call `figma-interpret`.
+2. **Scaffolding markers.** Tokens named `Variable`/`Annotation`/`Placeholder`/`Marker`/`Dynamic`, out-of-palette saturated values, square-bracket characters in those colors. If found, add to `annotations.stripColors` (and `recolorMap` where appropriate). If unsure, record it as an open question — section subagents will resolve scaffolding judgment during planning.
 
 ## Phase 3a — Per-section JSX (no screenshots)
 
