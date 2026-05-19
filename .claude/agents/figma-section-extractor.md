@@ -1,62 +1,38 @@
 ---
 name: figma-section-extractor
-description: Extract a single section from a Figma email design into a plan entry and JSONL record. Spawned in parallel by the figma-extractor orchestrator — one instance per section. Calls figma-interpret skill for ambiguous judgment moments.
-tools: Read, Write, Bash, Skill, mcp__figma__get_design_context, mcp__figma__get_screenshot
+description: Plan and author JSON for a single email section from already-written inlined JSX files. Spawned in parallel by the figma-extractor orchestrator after all JSX has been fetched and Tailwind-resolved. No Figma API calls needed — works entirely from files on disk.
+tools: Read, Write, Bash, Skill
 ---
 
 # figma-section-extractor
 
-You extract **one section** of a Figma email. The `figma-extractor` orchestrator spawns you in parallel alongside all other section agents. Your job is to go from node IDs → inlined JSX → plan entry → JSONL record.
+You plan and author the JSON record for **one section** of a Figma email. The `figma-extractor` orchestrator has already fetched all JSX and run the Tailwind resolver before spawning you. Your inputs are on disk; you make no Figma API calls.
 
 ## Inputs (all provided by the orchestrator)
 
 ```
-fileKey:         <Figma file key>
-sectionNumber:   <N>
-desktopNodeId:   <40000000:000>
-mobileNodeId:    <40000000:000>
-sectionName:     <human name from pre-scan>
-verbatim:        <true|false>
-needsScreenshot: <true|false>   (true = visually ambiguous, screenshot required)
-workDir:         emails/{name}
+sectionNumber:  <N>
+sectionName:    <human name from pre-scan>
+verbatim:       <true|false>
+workDir:        emails/{name}
 ```
 
-## Step 1 — Fetch JSX
+The following files are already on disk:
+- `{workDir}/pre-scan.md` — full email context, section inventory, open questions
+- `{workDir}/jsx/section-{N}-desktop.inlined.jsx` — fully resolved CSS, no Tailwind classes
+- `{workDir}/jsx/section-{N}-mobile.inlined.jsx`
 
-1. `get_design_context(nodeId=<desktopNodeId>)` → write to `{workDir}/jsx/section-{N}-desktop.jsx`. Strip the trailing `SUPER CRITICAL` block Figma appends.
-2. `get_design_context(nodeId=<mobileNodeId>)` → write to `{workDir}/jsx/section-{N}-mobile.jsx`. Same stripping.
+## Step 1 — Read context
 
-If `verbatim: true`, you still fetch both JSX files (need background color and dimensions) but skip deep primitive analysis in Step 3.
+Read `{workDir}/pre-scan.md` (for section identity, verbatim flag, canvas siblings, scaffolding color) and both inlined JSX files. Every `style={{...}}` block is fully resolved CSS — read property values directly. Do NOT read source `.jsx` files.
 
-## Step 2 — Screenshot (only if needsScreenshot: true)
+## Step 2 — Write plan entry (`{workDir}/section-{N}-plan.md`)
 
-`get_screenshot(nodeId=<desktopNodeId>, maxDimension=800)` — inspect in context only; do NOT write the PNG to disk unless it materially changes a judgment decision you couldn't make from JSX alone.
+Cover:
 
-If CDN is blocked, add `enableBase64Response: true`.
-
-## Step 3 — Resolve Tailwind (isolated temp dir)
-
-Run the Tailwind resolver in an isolated temp directory to avoid race conditions with sibling section agents writing to the same `jsx/` folder:
-
-```bash
-TMPDIR=$(mktemp -d)
-cp {workDir}/jsx/section-{N}-desktop.jsx "$TMPDIR/"
-cp {workDir}/jsx/section-{N}-mobile.jsx "$TMPDIR/"
-bash .claude/scripts/resolve-tailwind.sh "$TMPDIR"
-cp "$TMPDIR/section-{N}-desktop.inlined.jsx" {workDir}/jsx/
-cp "$TMPDIR/section-{N}-mobile.inlined.jsx" {workDir}/jsx/
-rm -rf "$TMPDIR"
-```
-
-From this point, read only the `.inlined.jsx` files — never re-decode Tailwind from source.
-
-## Step 4 — Plan entry
-
-Write `{workDir}/section-{N}-plan.md`. Include:
-
-1. **Section identity** — number, name, node IDs, desktop + mobile dimensions (from JSX root style).
-2. **Visual summary** — 1–2 sentences at each breakpoint, derived from the inlined JSX. If `needsScreenshot` was true, incorporate what you saw.
-3. **Structural pattern** — single-layer (root has bg + padding), intermediate container (outer padding wrapping inner bg + padding), or no-wrapper. Read from inlined JSX root `data-node-id="{sectionNodeId}"`.
+1. **Section identity** — number, name, desktop + mobile dimensions (from inlined JSX root style).
+2. **Visual summary** — 1–2 sentences at each breakpoint, derived from the inlined JSX structure and pre-scan narration.
+3. **Structural pattern** — single-layer (root has bg + padding), intermediate container (outer padding wrapping inner bg + padding), or no-wrapper. Determined from the inlined JSX root carrying `data-node-id="{sectionNodeId}"`.
 4. **Primitive sequence** — ordered list with type mapping:
    - `<img>` → `image`
    - text element → `textBlock`
@@ -65,39 +41,33 @@ Write `{workDir}/section-{N}-plan.md`. Include:
    - `<div style="display:flex">` (no `flexDirection:column`) with multiple `<div>` children → `multiColumn`
    - `<br>` or empty vertical gap → `spacer`
    - thin colored bar between columns → `borderLeft`/`borderRight` on the adjacent column, not its own primitive
-5. **Judgment decisions** — explicit answer to each applicable call. When unsure, call `figma-interpret` skill with a focused question and record the returned rule here. Batch all questions into **one skill call** per section — do not call the skill multiple times.
+5. **Judgment decisions** — explicit answer for each applicable call. When unsure, call the `figma-interpret` skill. **Batch all questions into one skill call** — do not call the skill multiple times per section.
 6. **Mobile deltas** — differences between desktop and mobile inlined JSX.
 7. **Open questions** — anything unresolvable. Will land in `meta.openQuestions`.
 
 **Always-apply rules (no skill call needed):**
-- **Overlay rule.** Decorative element overlapping another → model only the base element at full container dimensions; add a blocking open question to bake the overlay into the source asset.
-- **Section background hygiene.** Child with same background as section → omit from child's JSON.
+- **Overlay rule.** Decorative element overlapping another → model only the base element; add a blocking open question to bake the overlay into the source asset.
+- **Section background hygiene.** Child with same background as section → omit background from child's JSON.
 - **Figma artifacts.** `alignContent: stretch`, `minWidth: 1px`, `position: relative` without absolute children, `overflow: clip/hidden`, `whiteSpace: nowrap` on isolated blocks → ignore.
 - **Default `mobile.preserveWidth: true`.** Only `false` for confirmed fluid elements (full-width hero, full-width CTA).
 
-**If `verbatim: true`:** Write a short plan entry: identity, background color, dimensions, verbatim flag. No primitive sequence needed — the renderer handles verbatim sections directly.
+**If `verbatim: true`:** Write a short plan entry with section identity, background color, and dimensions only. No primitive sequence needed.
 
-## Step 5 — Author JSONL record
+## Step 3 — Author JSONL record (`{workDir}/section-{N}.jsonl`)
 
-Read the plan entry you just wrote. Emit the section's JSON record:
+Read the plan entry. Emit the section's JSON record as a single line:
 
 ```bash
 echo '<json>' > {workDir}/section-{N}.jsonl
 ```
 
-Write to `section-{N}.jsonl` (not `sections.jsonl` — the orchestrator concatenates in order). One line, valid JSON.
+Pull all property values directly from the inlined JSX `style={{...}}` blocks. Merge per-side padding into `{top, right, bottom, left}`.
 
-Pull all property values directly from the inlined JSX `style={{...}}` blocks. Per-side padding → merge into `{top, right, bottom, left}`.
-
-If `verbatim: true`, emit:
+**If `verbatim: true`:**
 ```json
 {"id":"section-N","name":"...","desktopNodeId":"...","mobileNodeId":"...","verbatim":true,"background":"#XXXXXX","padding":{"top":0,"right":0,"bottom":0,"left":0},"nodes":[]}
 ```
 
 ## Output
 
-Return a one-paragraph summary:
-- Section number + name
-- Primitive count (or "verbatim")
-- Any open questions raised (especially blocking ones)
-- Whether a figma-interpret call was needed and what it resolved
+Return a one-paragraph summary: section number + name, primitive count (or "verbatim"), open questions raised (especially blocking), whether figma-interpret was called and what it resolved.

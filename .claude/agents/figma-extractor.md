@@ -21,7 +21,7 @@ Extract `fileKey` and `nodeId` from each URL. Convert `-` to `:` in nodeIds.
 These rules exist because this agent has the largest context footprint in the workflow. Breaking them blows the budget and makes Phase 3d unreliable.
 
 1. **Do NOT read `references/json-format.md` upfront.** When you hit a judgment moment, call the `figma-interpret` skill with a focused question. It returns the relevant rule + JSON shape without loading the 18KB reference into your context.
-2. **Do NOT request base64 screenshots for every section.** Only Phase 0 (full email, both breakpoints) and Phase 3a per-section shots for visually-ambiguous sections. JSX usually tells you everything for clear sections.
+2. **Do NOT request base64 screenshots for every section.** Phase 0 (full email, both breakpoints) only. Per-section screenshots are not taken — section subagents work from inlined JSX.
 3. **Do NOT write a generator script** (no `build_spec.py`, no `emit_section.py`). Author JSON via the JSONL → `python3 -c` compose pattern in Phase 4. Generators add a buggy abstraction layer and hide judgment from review.
 4. **Per-section, not per-frame.** Always call `get_design_context` on each section node, never the whole frame — frame-level returns get truncated.
 
@@ -65,34 +65,41 @@ Write everything to `emails/{name}/pre-scan.md`. Later phases read this file, no
 1. **Brand and structural colors.** Map hex to named tokens.
 2. **Scaffolding markers.** Tokens named `Variable`/`Annotation`/`Placeholder`/`Marker`/`Dynamic`, out-of-palette saturated values, square-bracket characters in those colors. If found, add to `annotations.stripColors` (and `recolorMap` where appropriate). If unsure, call `figma-interpret`.
 
-## Phase 3 — Spawn section subagents (parallel)
+## Phase 3a — Per-section JSX (no screenshots)
 
-Read `emails/{name}/pre-scan.md` to get the full section list with node IDs and verbatim/ambiguity flags.
+For each section in pre-scan order:
 
-For each section, assess:
-- **`verbatim`**: true for sections containing regulated/legal copy (ISI, indications, references, legal footer).
-- **`needsScreenshot`**: true only for sections where the full-frame Phase 0 view is insufficient to determine structure (overlapping elements, unclear column layout, novel patterns). Default false — most sections are readable from JSX alone.
+1. `Figma:get_design_context(nodeId=<desktop section id>)` → `emails/{name}/jsx/section-{N}-desktop.jsx`. Strip the trailing `SUPER CRITICAL` block Figma appends.
+2. Same for mobile → `section-{N}-mobile.jsx`.
 
-Spawn **all section subagents in a single response** (one `Agent` tool call per section, all in parallel). Each call targets `figma-section-extractor` with this prompt:
+Do NOT take per-section screenshots here — the Phase 0 full-frame view is sufficient for most sections, and section subagents handle any ambiguity in their plan step.
+
+## Phase 3b — Resolve Tailwind (one command)
+
+```bash
+bash .claude/scripts/resolve-tailwind.sh emails/{name}/jsx
+```
+
+Produces `emails/{name}/jsx/decoded.css` and one `section-{N}-{breakpoint}.inlined.jsx` per input. Watch stderr for an `unresolved classes` count — capture each as a `meta.openQuestions` entry.
+
+## Phase 3c — Spawn section subagents (parallel)
+
+All JSX is now on disk. Spawn **all section subagents in a single response** (one `Agent` tool call per section, all in parallel). Each call targets `figma-section-extractor` with this prompt:
 
 ```
-fileKey: {fileKey}
 sectionNumber: {N}
-desktopNodeId: {id}
-mobileNodeId: {id}
 sectionName: {name from pre-scan}
 verbatim: {true|false}
-needsScreenshot: {true|false}
 workDir: emails/{name}
 ```
 
-Wait for all subagents to complete before proceeding to Phase 4. Each subagent writes:
-- `emails/{name}/jsx/section-{N}-desktop.jsx` + `.inlined.jsx`
-- `emails/{name}/jsx/section-{N}-mobile.jsx` + `.inlined.jsx`
+Mark `verbatim: true` for sections containing regulated/legal copy (ISI, indications, references, legal footer).
+
+Wait for all subagents to complete. Each subagent writes:
 - `emails/{name}/section-{N}-plan.md`
 - `emails/{name}/section-{N}.jsonl`
 
-If a subagent reports it could not produce a JSONL record, fix the specific section by re-invoking that subagent with the error context before proceeding. Do not block the whole batch for one failure.
+If a subagent reports it could not produce a JSONL record, re-invoke that subagent with the error context. Do not block the whole batch for one failure.
 
 ## Phase 4 — Compose and validate
 
