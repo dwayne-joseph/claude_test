@@ -7,7 +7,9 @@
       "Bash(mkdir -p emails/:*)",
       "Bash(mkdir -p emails/*/jsx)",
       "Bash(echo *>>emails/*/sections.jsonl)",
-      "Bash(echo *>>emails/*/progress.log)"
+      "Bash(echo *>>emails/*/progress.log)",
+      "Bash(bash .claude/scripts/save-figma-jsx.sh:*)",
+      "Bash(echo *>emails/*/.figma-nodes)"
     ]
   },
   "hooks": {
@@ -22,6 +24,15 @@
       }
     ],
     "PostToolUse": [
+      {
+        "matcher": "mcp__.*__get_design_context",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/save-figma-jsx.sh"
+          }
+        ]
+      },
       {
         "matcher": "Write",
         "hooks": [

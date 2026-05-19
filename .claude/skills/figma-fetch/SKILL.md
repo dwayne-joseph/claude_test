@@ -21,7 +21,15 @@ workDir:            emails/{name}
 
 ### Phase A — Discovery (4 calls in one parallel batch)
 
-Issue all four calls in a single response:
+Before issuing tool calls, write the node-mapping file so the PostToolUse hook can name the output files correctly:
+
+```bash
+echo '{"desktop":"{desktopFrameNodeId-with-dashes}","mobile":"{mobileFrameNodeId-with-dashes}"}' > {workDir}/.figma-nodes
+```
+
+(Use `-` not `:` in the nodeId values, e.g. `40000030-420`.)
+
+Then issue all four calls in a single response:
 
 - `get_screenshot(desktopFrameNodeId, maxDimension: 2000)`
 - `get_screenshot(mobileFrameNodeId, maxDimension: 2000)`
@@ -34,11 +42,13 @@ If the CDN is blocked on screenshots, retry with `enableBase64Response: true` an
 python3 -c "import base64; open('{workDir}/desktop-frame.png','wb').write(base64.b64decode('{b64}'))"
 ```
 
-Write the JSX to disk:
-- Desktop → `{workDir}/jsx/desktop-frame.jsx`
-- Mobile → `{workDir}/jsx/mobile-frame.jsx`
+**The JSX is saved automatically.** A PostToolUse hook fires after each `get_design_context` call and writes the JSX directly to `{workDir}/jsx/desktop-frame.jsx` and `{workDir}/jsx/mobile-frame.jsx` — including stripping the SUPER CRITICAL block and appending the footer tokens as a comment. **Do not write the JSX manually via the Write tool.**
 
-Strip the trailing `SUPER CRITICAL` block Figma appends — but **keep the response footer** that lists tokens ("These styles are contained in the design: ..."), component descriptions, and asset URLs. Append that footer as a comment block at the bottom of each `.jsx` file so the section-extractor can read it.
+After the parallel calls complete, confirm the files exist:
+
+```bash
+ls {workDir}/jsx/*.jsx
+```
 
 Write `{workDir}/pre-scan.md` from the screenshots + response footers. Cover:
 
@@ -59,7 +69,7 @@ This produces `{workDir}/jsx/decoded.css` and `desktop-frame.inlined.jsx` + `mob
 
 ### Fallback — only if a frame response was metadata-only or truncated
 
-If `get_design_context` on a frame returned metadata instead of code (token limit exceeded), parse section node IDs from the metadata response. Then fire all per-section `get_design_context` calls in one parallel response (both breakpoints at once). Write them as `{workDir}/jsx/section-{N}-{desktop|mobile}.jsx` and re-run `resolve-tailwind.sh`. The section-extractor agent can navigate either layout (single frame file or per-section files) using the same `data-node-id` lookup.
+If `get_design_context` on a frame returned metadata instead of code (token limit exceeded), parse section node IDs from the metadata response. Then fire all per-section `get_design_context` calls in one parallel response (both breakpoints at once). The hook will save them as `{workDir}/jsx/section-{nodeId}.jsx` automatically (since none match the desktop/mobile IDs in `.figma-nodes`). Re-run `resolve-tailwind.sh`. The section-extractor agent can navigate either layout (single frame file or per-section files) using the same `data-node-id` lookup.
 
 ## Output
 
