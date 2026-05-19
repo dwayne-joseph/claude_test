@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash .claude/scripts/resolve-tailwind.sh:*)",
+      "Bash(python3 .claude/scripts/validate-spec.py:*)",
+      "Bash(python3 .claude/scripts/validate-html.py:*)",
+      "Bash(mkdir -p emails/:*)",
+      "Bash(mkdir -p emails/*/jsx)",
+      "Bash(echo *>>emails/*/sections.jsonl)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/resolve-tailwind.sh --check"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$(jq -r '.tool_input.file_path // empty')\"; case \"$f\" in *spec.json) python3 .claude/scripts/validate-spec.py \"$f\" ;; *.html) python3 .claude/scripts/validate-html.py \"$f\" ;; esac"
+          }
+        ]
+      }
+    ]
+  }
+}

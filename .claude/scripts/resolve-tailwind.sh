@@ -23,6 +23,16 @@
 set -euo pipefail
 
 # ----------------------------------------------------------------------------
+# --check mode — verify a Tailwind CLI is available, then exit (no work done).
+# Used by the SessionStart hook so failures surface up front, not mid-workflow.
+# ----------------------------------------------------------------------------
+CHECK_ONLY=0
+if [ "${1:-}" = "--check" ]; then
+  CHECK_ONLY=1
+  shift
+fi
+
+# ----------------------------------------------------------------------------
 # Locate Tailwind
 # ----------------------------------------------------------------------------
 WEB_CLAUDE_TAILWIND="/home/claude/.npm-global/lib/node_modules/@mermaid-js/mermaid-cli/node_modules/tailwindcss/lib/cli.js"
@@ -56,6 +66,10 @@ Install one of: npm i -g tailwindcss@3.4, or ensure npx is on PATH.
 
 EOF
   exit 1
+fi
+
+if [ "$CHECK_ONLY" = "1" ]; then
+  exit 0
 fi
 
 # ----------------------------------------------------------------------------
