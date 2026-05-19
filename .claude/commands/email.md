@@ -39,66 +39,26 @@ workDir:            emails/<name>
 
 The skill runs in this conversation context where Figma tools are available. It writes:
 - `emails/<name>/pre-scan.md`
-- `emails/<name>/jsx/section-{N}-desktop.jsx` + `.inlined.jsx` (all sections)
-- `emails/<name>/jsx/section-{N}-mobile.jsx` + `.inlined.jsx` (all sections)
-- `emails/<name>/sections-manifest.jsonl`
+- `emails/<name>/jsx/desktop-frame.jsx` + `.inlined.jsx`
+- `emails/<name>/jsx/mobile-frame.jsx` + `.inlined.jsx`
+
+(If `figma-fetch` fell back to per-section calls because a frame response was truncated, you'll instead see `section-{N}-{desktop|mobile}.jsx` files. The downstream agent handles both layouts.)
 
 Wait for the skill to complete before proceeding.
 
-## Step 2 — Plan + author JSON (parallel subagents)
+## Step 2 — Author spec.json (single subagent)
 
-Read `emails/<name>/sections-manifest.jsonl`. Spawn one `figma-section-extractor` Agent per section **all in a single response** (parallel). Each agent receives:
+Invoke one `figma-section-extractor` agent via `Task` with:
 
 ```
-sectionNumber: <n>
-sectionName:   <name>
-verbatim:      <true|false>
-workDir:       emails/<name>
+workDir: emails/<name>
 ```
 
-Wait for all agents to complete. Each writes:
-- `emails/<name>/section-{N}-plan.md`
-- `emails/<name>/section-{N}.jsonl`
+The agent reads `pre-scan.md` and the two inlined frame JSX files, navigates sections by `data-node-id` boundary, and writes both `plan.md` and the complete `spec.json` in one pass. The post-write hook auto-validates `spec.json`.
 
-If any agent failed to produce its JSONL, re-invoke it with the error context before proceeding.
+Wait for the agent to complete. If validation failed, the agent will have surfaced the errors — re-invoke with the error context if needed.
 
-## Step 3 — Compose spec.json
-
-Assemble `plan.md` from per-section files in order:
-
-```bash
-for i in $(seq 1 <N>); do cat emails/<name>/section-$i-plan.md; echo; done > emails/<name>/plan.md
-```
-
-Compose `spec.json` — populate `meta` and `annotations` from the `figma-fetch` skill output and `pre-scan.md`:
-
-```bash
-python3 -c "
-import json, os
-work = 'emails/<name>'
-n = <section_count>
-sections = [json.loads(open(f'{work}/section-{i}.jsonl').read().strip()) for i in range(1, n+1)]
-spec = {
-  'specVersion': '2.0.0',
-  'meta': {
-    'emailName': '<name>',
-    'generatedAt': '<ISO date>',
-    'openQuestions': []
-  },
-  'annotations': {
-    'stripColors': [],
-    'recolorMap': {},
-    'stripBrackets': True
-  },
-  'sections': sections,
-}
-json.dump(spec, open(f'{work}/spec.json', 'w'), indent=2)
-"
-```
-
-The post-write hook auto-validates `spec.json`. Fix any errors before proceeding.
-
-## Step 4 — Render JSON → HTML
+## Step 3 — Render JSON → HTML
 
 Invoke the `email-renderer` subagent (via `Task` with `subagent_type: "email-renderer"`). Pass it:
 
@@ -107,7 +67,7 @@ Invoke the `email-renderer` subagent (via `Task` with `subagent_type: "email-ren
 
 Wait for completion. The post-write hook automatically validates `index.html`.
 
-## Step 5 — Final summary
+## Step 4 — Final summary
 
 Report:
 - Paths to `spec.json` and `index.html`
@@ -118,5 +78,6 @@ Report:
 ## Notes
 
 - To re-run only the render: invoke `email-renderer` via `Task` directly with the spec path.
+- To re-author the spec only: invoke `figma-section-extractor` via `Task` with the workDir.
 - To re-fetch Figma data only: invoke the `figma-fetch` skill directly.
 - The Tailwind CLI check runs at session start. If it failed, the fetch skill will warn.

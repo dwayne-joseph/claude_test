@@ -1,6 +1,6 @@
 ---
 name: figma-fetch
-description: Fetch all Figma data for an email extraction — screenshots, metadata, variable defs, per-section JSX, and Tailwind inlining. Runs in the main conversation context where Figma MCP tools are available. Writes all files to disk and produces a sections-manifest.jsonl for downstream section subagents.
+description: Fetch Figma data for an email extraction in a single fast-path discovery batch — screenshots and frame-level JSX in parallel. Runs in the main conversation context where Figma MCP tools are available. Writes pre-scan.md and two inlined frame JSX files to disk for the downstream section-extractor agent.
 ---
 
 # figma-fetch
@@ -17,73 +17,56 @@ name:               <email slug>
 workDir:            emails/{name}
 ```
 
-## Execution — run these phases in order
+## Execution
 
-### Phase 0 — Screenshots
+### Phase A — Discovery (4 calls in one parallel batch)
 
-Call `get_screenshot` on the desktop frame and mobile frame **in parallel** (both in the same response). Use `maxDimension: 2000`. If the CDN is blocked, add `enableBase64Response: true` and decode:
+Issue all four calls in a single response:
+
+- `get_screenshot(desktopFrameNodeId, maxDimension: 2000)`
+- `get_screenshot(mobileFrameNodeId, maxDimension: 2000)`
+- `get_design_context(desktopFrameNodeId, forceCode: true, excludeScreenshot: true)`
+- `get_design_context(mobileFrameNodeId, forceCode: true, excludeScreenshot: true)`
+
+If the CDN is blocked on screenshots, retry with `enableBase64Response: true` and decode:
 
 ```bash
 python3 -c "import base64; open('{workDir}/desktop-frame.png','wb').write(base64.b64decode('{b64}'))"
 ```
 
-Write `{workDir}/pre-scan.md` with:
-- Section inventory (number top to bottom, name each, note desktop-only / mobile-only)
-- Overlapping decorative elements
-- Verbatim candidates (ISI, indications, references, legal footer)
-- Mobile differences visible from screenshots
-- Canvas-level siblings (scaffolding bracket frames, overlay bars)
+Write the JSX to disk:
+- Desktop → `{workDir}/jsx/desktop-frame.jsx`
+- Mobile → `{workDir}/jsx/mobile-frame.jsx`
 
-### Phase 1 — Metadata
+Strip the trailing `SUPER CRITICAL` block Figma appends — but **keep the response footer** that lists tokens ("These styles are contained in the design: ..."), component descriptions, and asset URLs. Append that footer as a comment block at the bottom of each `.jsx` file so the section-extractor can read it.
 
-Call `get_metadata` on the desktop frame and mobile frame **in parallel**.
+Write `{workDir}/pre-scan.md` from the screenshots + response footers. Cover:
 
-1. Pair each visual section to its node ID at both breakpoints. Confirm 1:1.
-2. Identify any mobile-only or desktop-only sections.
-3. Identify canvas-level siblings — classify as editorial scaffolding (skip) or visual overlay (blocking open question).
+- **Section inventory** — number top to bottom, name each from visual content, note desktop-only / mobile-only. Pair desktop/mobile sections 1:1 by visual order. Section node IDs come from the `data-node-id` attributes you can already see in the JSX (no separate metadata call needed).
+- **Verbatim candidates** — ISI, indications, references, legal footer (judgment from screenshots).
+- **Overlapping decorative elements** — anything that overlays another section. These become blocking open questions.
+- **Mobile differences** — what changes between breakpoints visually.
+- **Canvas-level siblings** — scaffolding bracket frames, overlay bars. Classify as editorial scaffolding (skip) or visual overlay (blocking).
+- **Design tokens** — copy the full list from the response footer ("Tzield/BrandColor: #0023C8", etc.). Identify scaffolding markers (tokens named `Variable`/`Annotation`/`Placeholder`/`Marker`/`Dynamic`, out-of-palette saturated values, square-bracket characters in those colors). Record `stripColors` and `recolorMap` candidates.
 
-Append the node ID table to `{workDir}/pre-scan.md`.
-
-### Phase 2 — Design tokens
-
-Call `get_variable_defs` on both frames **in parallel**.
-
-Identify scaffolding markers: tokens named `Variable`/`Annotation`/`Placeholder`/`Marker`/`Dynamic`, out-of-palette saturated values, square-bracket characters in those colors. Record `stripColors` and `recolorMap` candidates. Append findings to `{workDir}/pre-scan.md`.
-
-### Phase 3a — Per-section JSX
-
-For each section, call `get_design_context` on the desktop node and mobile node **in the same response** (parallel pair). Work section by section — issue both calls together, write both files, then move to the next section.
-
-- Desktop → `{workDir}/jsx/section-{N}-desktop.jsx`
-- Mobile → `{workDir}/jsx/section-{N}-mobile.jsx`
-
-Strip the trailing `SUPER CRITICAL` block Figma appends to each response.
-
-### Phase 3b — Resolve Tailwind
+### Phase B — Tailwind resolve
 
 ```bash
 bash .claude/scripts/resolve-tailwind.sh {workDir}/jsx
 ```
 
-This produces `{workDir}/jsx/decoded.css` and one `.inlined.jsx` per source `.jsx`.
+This produces `{workDir}/jsx/decoded.css` and `desktop-frame.inlined.jsx` + `mobile-frame.inlined.jsx`.
 
-### Phase 3c — Write sections manifest
+### Fallback — only if a frame response was metadata-only or truncated
 
-Write `{workDir}/sections-manifest.jsonl` — one JSON line per section, in section order:
-
-```
-{"n":1,"name":"Envelope metadata","desktopNodeId":"40000030:421","mobileNodeId":"40000030:441","verbatim":false}
-{"n":2,"name":"Preheader","desktopNodeId":"40000030:422","mobileNodeId":"40000030:442","verbatim":false}
-...
-```
-
-Set `verbatim: true` for sections containing regulated/legal copy (ISI, indications, references, legal footer).
+If `get_design_context` on a frame returned metadata instead of code (token limit exceeded), parse section node IDs from the metadata response. Then fire all per-section `get_design_context` calls in one parallel response (both breakpoints at once). Write them as `{workDir}/jsx/section-{N}-{desktop|mobile}.jsx` and re-run `resolve-tailwind.sh`. The section-extractor agent can navigate either layout (single frame file or per-section files) using the same `data-node-id` lookup.
 
 ## Output
 
 Return a summary:
-- Section count
-- Verbatim sections
+- Section count (from `data-node-id` count in the frame JSX)
+- Verbatim sections (from pre-scan analysis)
 - Scaffolding color(s) found
-- Any open questions (especially blocking ones)
-- Confirmation that all JSX + inlined JSX files are on disk
+- Open questions raised (especially blocking)
+- Whether the fast path or the fallback ran
+- Confirmation that pre-scan.md and inlined JSX files are on disk
