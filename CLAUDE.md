@@ -14,29 +14,40 @@ The `/email` slash command orchestrates two subagents end to end. Both Figma URL
 
 ```
 /email (.claude/commands/email.md)
-  ├─ figma-extractor agent  (.claude/agents/figma-extractor.md)
-  │     └─ calls figma-interpret skill  (.claude/skills/figma-interpret/)
-  │           for ambiguous Figma judgment moments
-  └─ email-renderer agent   (.claude/agents/email-renderer.md)
-        └─ calls email-render skill     (.claude/skills/email-render/)
-              for primitive → HTML pattern lookups
+  ├─ Step 1: figma-fetch skill  (.claude/skills/figma-fetch/)
+  │     Runs inline in main context. Owns all Figma API calls:
+  │     screenshots, metadata, variable defs, per-section JSX, Tailwind.
+  │     Writes JSX files + sections-manifest.jsonl to disk.
+  │
+  ├─ Step 2: figma-section-extractor agents  (.claude/agents/figma-section-extractor.md)
+  │     One per section, spawned in parallel. No Figma tools needed.
+  │     Reads inlined JSX from disk → writes plan entry + JSONL.
+  │     Calls figma-interpret skill for ambiguous judgment moments.
+  │
+  ├─ Step 3: /email command composes spec.json from section-N.jsonl files
+  │
+  └─ Step 4: email-renderer agent  (.claude/agents/email-renderer.md)
+        Reads spec.json → writes index.html.
+        Calls email-render skill for primitive → HTML pattern lookups.
 ```
 
-The two agents run in **separate context windows** — extractor JSX and screenshots do not carry into the renderer. That isolation is the main token win.
+Figma MCP tools only work in the main session context, not in spawned subagents. The `figma-fetch` skill runs inline so it has direct tool access. Section subagents only need Read/Write/Bash/Skill — no Figma dependency.
 
-The skills are **advisors**, not workflows. They answer focused questions (overlay vs column? what's the multiColumn HTML pattern?) without loading the full reference into the agent's context. Reference files live in `.claude/skills/*/references/`.
+Skills are **advisors**, not workflows. They answer focused questions without loading full references into context. Reference files live in `.claude/skills/*/references/`.
 
 ## Path conventions
 
 ```
 emails/<email-name>/
-  ├─ pre-scan.md        # Phase 0–1 visual narration + node ID map
-  ├─ plan.md            # Phase 3c judgment plan
-  ├─ render-plan.md     # Step 3 HTML plan
-  ├─ sections.jsonl     # Phase 3d scratch
-  ├─ spec.json          # validated extractor output (consumed by renderer)
-  ├─ index.html         # validated renderer output (final deliverable)
-  └─ jsx/               # per-section JSX + .inlined.jsx + screenshots
+  ├─ pre-scan.md               # Phase 0–1 visual narration + node ID map
+  ├─ sections-manifest.jsonl   # section list written by figma-fetch skill
+  ├─ section-{N}-plan.md       # per-section judgment plan (one per section)
+  ├─ section-{N}.jsonl         # per-section JSON record (one per section)
+  ├─ plan.md                   # assembled from section-N-plan.md files
+  ├─ spec.json                 # validated extractor output (consumed by renderer)
+  ├─ render-plan.md            # Step 3 HTML plan
+  ├─ index.html                # validated renderer output (final deliverable)
+  └─ jsx/                      # per-section JSX + .inlined.jsx
 ```
 
 Worked example: `emails/tzield-v1/`.
