@@ -1,0 +1,1036 @@
+{
+  "specVersion": "2.0.0",
+  "meta": {
+    "emailName": "Tzield_V1_Test",
+    "generatedAt": "2026-05-19T21:14:21Z",
+    "desktopWidth": 600,
+    "mobileWidth": 360,
+    "verbatimSections": ["section-11", "section-12", "section-14"],
+    "openQuestions": [
+      {"id": "scaffolding-bracket-overlay", "question": "Confirm `[ ]` overlay bracket frames (nodes 40000030:435 / 40000030:454) are editorial scaffolding to skip in production HTML.", "blocking": true},
+      {"id": "cxq-tile-2-default", "question": "Figma shows CXQ tile 2 highlighted (gray fill). Is this a sample display or should production render no default selection? Currently rendered as shown in design.", "blocking": true},
+      {"id": "from-to-date-subject", "question": "Confirm From/To/Date/Subject preview block (section-1) is editorial scaffolding (not rendered in production HTML body). Currently flagged skipInProduction: true.", "blocking": true},
+      {"id": "coral-divider-asset", "question": "Section 4: Need a 600x4 (or 1x4 tiling) coral (#FF5000) divider image asset to replace the current placeholder src.", "blocking": true},
+      {"id": "stage-continuum-icons", "question": "Section 8: Each stage icon is composited (rectangle + oval overlay) in Figma. Need single composited PNG assets for Stage 2 and Stage 3 icons.", "blocking": true},
+      {"id": "refs-final-copy", "question": "References section: `[2025.]` and `[Press release pending]` placeholders need final MLR copy.", "blocking": false},
+      {"id": "decorative-lines-hero", "question": "Decorative Lines overlay (coral+blue vertical bands): confirm bake-into-hero approach and supply composited hero image asset.", "blocking": false},
+      {"id": "hero-alt-text", "question": "Hero image alt text — none provided in Figma; need final copy per brand standards.", "blocking": false},
+      {"id": "logo-asset-urls", "question": "Tzield + Sanofi logo asset URLs are Figma CDN (7-day expiry). Need stable hosted URLs for production.", "blocking": false},
+      {"id": "link-hrefs", "question": "All link href values are placeholders (`#`). Production URLs needed for all CTA/nav/footer links.", "blocking": false}
+    ]
+  },
+  "annotations": {
+    "stripBrackets": true,
+    "stripColors": ["#FF00B7"],
+    "recolorMap": {"#FF00B7": "#414042"}
+  },
+  "sections": [
+    {
+      "id": "section-1",
+      "name": "CONTENT MODULES — From/To/Date/Subject",
+      "figmaNodeId": "40000030:421",
+      "skipInProduction": true,
+      "padding": {"top": 12, "right": 24, "bottom": 12, "left": 24},
+      "nodes": [
+        {
+          "type": "textBlock",
+          "content": [
+            {"text": "From: [Sanofi US <medintel@hcp-email.sanofi.us>]\nTo: [HCP email]\nDate: [MM/DD/YYYY> <HH:MM:AM/PM>]\nSubject: ["},
+            {"text": "Explore a", "color": "#414042"},
+            {"text": "["},
+            {"text": "n", "color": "#414042"},
+            {"text": "] "},
+            {"text": "["},
+            {"text": "new", "color": "#414042"},
+            {"text": "]"},
+            {"text": " indication for a T1D treatment option.", "color": "#414042"},
+            {"text": "]"}
+          ],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#FF00B7",
+          "alignment": "left"
+        }
+      ]
+    },
+    {
+      "id": "section-2",
+      "name": "PREHEADER MODULES — Preheader line",
+      "figmaNodeId": "40000030:422",
+      "background": "#E4EEF7",
+      "padding": {"top": 12, "right": 24, "bottom": 12, "left": 24},
+      "nodes": [
+        {
+          "type": "textBlock",
+          "content": [
+            {"text": "Preheader: ["},
+            {"text": "Learn about this treatment option for your patients."},
+            {"text": "]"}
+          ],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#414042",
+          "alignment": "left"
+        }
+      ]
+    },
+    {
+      "id": "section-3",
+      "name": "PREHEADER MODULES — Header utility links",
+      "figmaNodeId": "40000030:423",
+      "background": "#E4EEF7",
+      "padding": {"top": 12, "right": 24, "bottom": 12, "left": 24},
+      "nodes": [
+        {
+          "type": "textBlock",
+          "content": [
+            {"text": "View in browser", "underline": true, "link": {"href": "#", "alias": "header-view-in-browser"}},
+            {"text": " "},
+            {"text": "|", "color": "#414042"},
+            {"text": " "},
+            {"text": "Contact a Rep", "underline": true, "link": {"href": "#", "alias": "header-contact-rep"}},
+            {"text": "", "color": "#414042"},
+            {"text": "|", "color": "#414042"},
+            {"text": " "},
+            {"text": "Unsubscribe", "underline": true, "link": {"href": "#", "alias": "header-unsubscribe"}}
+          ],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#0023C8",
+          "alignment": "left"
+        }
+      ]
+    },
+    {
+      "id": "section-4",
+      "name": "HEADER MODULES — Sanofi logo + ISI link block + INDICATIONS",
+      "figmaNodeId": "40000030:424",
+      "padding": {"top": 14, "right": 0, "bottom": 12, "left": 0},
+      "nodes": [
+        {
+          "type": "image",
+          "src": "https://www.figma.com/api/mcp/asset/c157b298-90f8-48d8-bd2d-03504192148c",
+          "alt": "",
+          "width": 60,
+          "height": 16,
+          "decorative": true,
+          "alignment": "right",
+          "padding": {"top": 0, "right": 10, "bottom": 14, "left": 0},
+          "mobile": {"preserveWidth": true}
+        },
+        {
+          "type": "image",
+          "src": "PLACEHOLDER_CORAL_DIVIDER_1X4.png",
+          "alt": "",
+          "width": 600,
+          "height": 4,
+          "decorative": true,
+          "fluid": true,
+          "alignment": "center",
+          "padding": {"top": 0, "right": 0, "bottom": 0, "left": 0},
+          "mobile": {"preserveWidth": false}
+        },
+        {
+          "type": "multiColumn",
+          "alignment": "left",
+          "verticalAlignment": "top",
+          "mobileLayout": "stack",
+          "columns": [
+            {
+              "id": "tzield-logo-col",
+              "width": 214,
+              "alignment": "left",
+              "padding": {"top": 24, "right": 0, "bottom": 24, "left": 24},
+              "content": {
+                "type": "image",
+                "src": "https://www.figma.com/api/mcp/asset/6334194d-a90b-4709-85ef-3a6074462abb",
+                "alt": "TZIELD (teplizumab-mzwv)",
+                "width": 214,
+                "height": 90
+              },
+              "mobile": {"preserveWidth": true, "alignment": "left"}
+            },
+            {
+              "id": "pi-links-col",
+              "width": 225,
+              "alignment": "left",
+              "borderLeft": {"width": 1, "color": "#0023C8", "hideOnMobile": true},
+              "padding": {"top": 24, "right": 24, "bottom": 24, "left": 24},
+              "content": {
+                "type": "textBlock",
+                "content": [
+                  {"text": "Read Indication and\nFull Prescribing Information", "underline": true, "link": {"href": "#", "alias": "header-read-indication-full-pi"}},
+                  {"text": "\n\n"},
+                  {"text": "Full Prescribing Information", "underline": true, "link": {"href": "#", "alias": "header-full-pi"}},
+                  {"text": ", "},
+                  {"text": "including boxed WARNING", "underline": true, "link": {"href": "#", "alias": "header-boxed-warning"}}
+                ],
+                "fontFamily": "Arial, Helvetica, sans-serif",
+                "fontSize": 16,
+                "lineHeight": 18,
+                "color": "#0023C8",
+                "alignment": "left"
+              },
+              "mobile": {"preserveWidth": false, "alignment": "left"}
+            }
+          ],
+          "gaps": [
+            {"between": ["tzield-logo-col", "pi-links-col"], "desktop": 50, "mobile": 0, "direction": "auto"}
+          ]
+        },
+        {
+          "type": "textBlock",
+          "content": [{"text": "INDICATIONS"}],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 19,
+          "lineHeight": 23,
+          "fontWeight": "bold",
+          "color": "#0023C8",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 24, "bottom": 24, "left": 24}
+        },
+        {
+          "type": "textBlock",
+          "content": [{"text": "TZIELD is a disease-modifying agent that preserves beta-cell function indicated:"}],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#414042",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 24, "bottom": 0, "left": 24}
+        },
+        {
+          "type": "list",
+          "style": "bullet",
+          "indent": 24,
+          "bulletColor": "#414042",
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#414042",
+          "itemSpacing": 0,
+          "padding": {"top": 0, "right": 24, "bottom": 0, "left": 24},
+          "items": [
+            {"content": [{"text": "to delay the onset of Stage 3 type 1 diabetes (T1D) in adults and pediatric patients aged 8 years and older with Stage 2 T1D."}]},
+            {"content": [{"text": "to delay the progression of Stage 3 T1D in adults and pediatric patients 8 years and older recently diagnosed with Stage 3 T1D. This indication is approved under accelerated approval based on C-peptide as a marker of beta-cell preservation. Continued approval for this indication may be contingent upon verification and description of clinical benefit in confirmatory trials."}]}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "section-5",
+      "name": "CONTENT MODULES — NEW INDICATION headline",
+      "figmaNodeId": "40000030:425",
+      "background": "#06537B",
+      "padding": {"top": 12, "right": 24, "bottom": 12, "left": 24},
+      "nodes": [
+        {
+          "type": "textBlock",
+          "content": [
+            {"text": "["},
+            {"text": "NEW INDICATION", "color": "#E4EEF7"},
+            {"text": "]"},
+            {"text": " FOR APPROPRIATE PATIENTS", "color": "#E4EEF7"},
+            {"text": "1", "color": "#E4EEF7", "fontSize": 19, "superscript": true}
+          ],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 30,
+          "lineHeight": 36,
+          "fontWeight": "bold",
+          "color": "#E4EEF7",
+          "alignment": "left"
+        }
+      ]
+    },
+    {
+      "id": "section-6",
+      "name": "CONTENT MODULES — CNPV approval body",
+      "figmaNodeId": "40000030:426",
+      "background": "#0023C8",
+      "padding": {"top": 12, "right": 24, "bottom": 12, "left": 24},
+      "nodes": [
+        {
+          "type": "textBlock",
+          "content": [
+            {"text": "Due to the significant unmet need in T1D and years of clinical research, TZIELD has been approved for patients with Stage 3 T1D within "},
+            {"text": "["},
+            {"text": "6-12 weeks"},
+            {"text": "] "},
+            {"text": "of diagnosis as the first therapy under the FDA’s Commissioner National Priority Voucher (CNPV) program."},
+            {"text": "2", "fontSize": 12, "superscript": true}
+          ],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 19,
+          "lineHeight": 23,
+          "color": "#FFFFFF",
+          "alignment": "left"
+        }
+      ]
+    },
+    {
+      "id": "section-7",
+      "name": "HERO MODULES — Patient image",
+      "figmaNodeId": "40000030:427",
+      "padding": {"top": 12, "right": 0, "bottom": 12, "left": 0},
+      "nodes": [
+        {
+          "type": "image",
+          "src": "https://www.figma.com/api/mcp/asset/bad1fac4-11e7-4906-89a3-2ef3cee0e5bd",
+          "alt": "",
+          "width": 600,
+          "height": 300,
+          "decorative": true,
+          "fluid": true,
+          "alignment": "center",
+          "mobile": {"preserveWidth": false}
+        }
+      ]
+    },
+    {
+      "id": "section-8",
+      "name": "CONTENT MODULES — Stage continuum block",
+      "figmaNodeId": "40000030:428",
+      "padding": {"top": 12, "right": 0, "bottom": 12, "left": 0},
+      "nodes": [
+        {
+          "type": "textBlock",
+          "content": [
+            {"text": "TZIELD has expanded across the following stages of the T1D disease continuum"},
+            {"text": "1", "fontSize": 19, "superscript": true}
+          ],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 30,
+          "lineHeight": 34,
+          "fontWeight": "bold",
+          "color": "#0023C8",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 24, "bottom": 0, "left": 24}
+        },
+        {
+          "type": "multiColumn",
+          "alignment": "left",
+          "verticalAlignment": "center",
+          "mobileLayout": "stack",
+          "columns": [
+            {
+              "id": "stage2-icon-col",
+              "width": 110,
+              "alignment": "left",
+              "padding": {"top": 24, "right": 0, "bottom": 24, "left": 24},
+              "content": {
+                "type": "image",
+                "src": "https://www.figma.com/api/mcp/asset/b8caa5ae-c30e-432a-9c1e-40273e48ed1d",
+                "alt": "",
+                "width": 110,
+                "height": 110,
+                "decorative": true
+              },
+              "mobile": {"preserveWidth": true, "alignment": "center"}
+            },
+            {
+              "id": "stage2-text-col",
+              "width": 418,
+              "alignment": "left",
+              "padding": {"top": 24, "right": 24, "bottom": 24, "left": 24},
+              "content": {
+                "type": "textBlock",
+                "content": [{"text": "APPROVED in Stage 2 T1D"}],
+                "fontFamily": "Arial, Helvetica, sans-serif",
+                "fontSize": 20,
+                "lineHeight": 28,
+                "fontWeight": "bold",
+                "color": "#414042",
+                "alignment": "left"
+              },
+              "mobile": {"preserveWidth": false, "alignment": "center"}
+            }
+          ],
+          "gaps": [
+            {"between": ["stage2-icon-col", "stage2-text-col"], "desktop": 0, "mobile": 16, "direction": "auto"}
+          ]
+        },
+        {
+          "type": "multiColumn",
+          "alignment": "left",
+          "verticalAlignment": "center",
+          "mobileLayout": "stack",
+          "columns": [
+            {
+              "id": "stage3-icon-col",
+              "width": 110,
+              "alignment": "left",
+              "padding": {"top": 24, "right": 0, "bottom": 24, "left": 24},
+              "content": {
+                "type": "image",
+                "src": "https://www.figma.com/api/mcp/asset/b8caa5ae-c30e-432a-9c1e-40273e48ed1d",
+                "alt": "",
+                "width": 110,
+                "height": 110,
+                "decorative": true
+              },
+              "mobile": {"preserveWidth": true, "alignment": "center"}
+            },
+            {
+              "id": "stage3-text-col",
+              "width": 418,
+              "alignment": "left",
+              "padding": {"top": 24, "right": 24, "bottom": 24, "left": 24},
+              "content": {
+                "type": "textBlock",
+                "content": [
+                  {"text": "["},
+                  {"text": "NOW"},
+                  {"text": "]"},
+                  {"text": " APPROVED in Stage 3 T1D within "},
+                  {"text": "["},
+                  {"text": "6-12 weeks"},
+                  {"text": "]"},
+                  {"text": " of diagnosis"}
+                ],
+                "fontFamily": "Arial, Helvetica, sans-serif",
+                "fontSize": 20,
+                "lineHeight": 28,
+                "fontWeight": "bold",
+                "color": "#414042",
+                "alignment": "left"
+              },
+              "mobile": {"preserveWidth": false, "alignment": "center"}
+            }
+          ],
+          "gaps": [
+            {"between": ["stage3-icon-col", "stage3-text-col"], "desktop": 0, "mobile": 16, "direction": "auto"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "section-9",
+      "name": "CONTENT MODULES — Definitions",
+      "figmaNodeId": "40000030:429",
+      "padding": {"top": 12, "right": 24, "bottom": 12, "left": 24},
+      "nodes": [
+        {
+          "type": "textBlock",
+          "content": [{"text": "T1D=type 1 diabetes."}],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 19,
+          "lineHeight": 23,
+          "color": "#414042",
+          "alignment": "left"
+        }
+      ]
+    },
+    {
+      "id": "section-10",
+      "name": "CONTENT MODULES — Sub-CTA + button",
+      "figmaNodeId": "40000030:430",
+      "background": "#E4EEF7",
+      "padding": {"top": 12, "right": 24, "bottom": 12, "left": 24},
+      "nodes": [
+        {
+          "type": "textBlock",
+          "content": [
+            {"text": "Learn more about the"},
+            {"text": " ["},
+            {"text": "new"},
+            {"text": "] "},
+            {"text": "indication"}
+          ],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 19,
+          "lineHeight": 23,
+          "color": "#000000",
+          "alignment": "center"
+        },
+        {
+          "type": "button",
+          "label": "Discover More",
+          "link": {"href": "#", "alias": "cta-discover-more"},
+          "background": "#0023C8",
+          "textColor": "#FFFFFF",
+          "border": {"width": 4, "color": "#80CBFF"},
+          "borderRadius": 0,
+          "width": 444,
+          "height": 88,
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 20,
+          "lineHeight": 24,
+          "fontWeight": "bold",
+          "alignment": "center",
+          "padding": {"top": 24, "right": 0, "bottom": 0, "left": 0},
+          "mobile": {"width": 204, "height": 98, "fluid": false}
+        }
+      ]
+    },
+    {
+      "id": "section-11",
+      "name": "ISI MODULE — Important Safety Information",
+      "figmaNodeId": "40000030:431",
+      "padding": {"top": 12, "right": 24, "bottom": 12, "left": 24},
+      "nodes": [
+        {
+          "type": "textBlock",
+          "content": [{"text": "IMPORTANT SAFETY INFORMATION"}],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 19,
+          "lineHeight": 23,
+          "fontWeight": "bold",
+          "color": "#0023C8",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 0, "bottom": 12, "left": 0}
+        },
+        {
+          "type": "textBlock",
+          "content": [{"text": "WARNINGS AND PRECAUTIONS"}],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "fontWeight": "bold",
+          "color": "#414042",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 0, "bottom": 12, "left": 0}
+        },
+        {
+          "type": "list",
+          "style": "bullet",
+          "indent": 24,
+          "bulletColor": "#414042",
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#414042",
+          "itemSpacing": 0,
+          "padding": {"top": 0, "right": 0, "bottom": 12, "left": 0},
+          "items": [
+            {"content": [
+              {"text": "Cytokine Release Syndrome (CRS):", "bold": true},
+              {"text": " CRS occurred in TZIELD-treated patients during the treatment period and through 28 days after the last drug administration. Prior to TZIELD treatment, premedicate with antipyretics, antihistamines and/or antiemetics, and treat similarly if symptoms occur during treatment. If severe CRS develops, consider pausing dosing for 1 day to 2 days and administering the remaining doses to complete the full 14-day course on consecutive days; or discontinue treatment. Monitor liver enzymes and bilirubin during treatment. Discontinue TZIELD treatment in patients who develop elevated alanine aminotransferase or aspartate aminotransferase more than 5 times the upper limit of normal (ULN) or bilirubin more than 3 times ULN."}
+            ]},
+            {"content": [
+              {"text": "Serious Infections:", "bold": true},
+              {"text": " Use of TZIELD is not recommended in patients with active serious infection or chronic infection other than localized skin infections. Monitor patients for signs and symptoms of infection during and after TZIELD administration. If serious infection develops, treat appropriately, and discontinue TZIELD."}
+            ]},
+            {"content": [
+              {"text": "Lymphopenia: ", "bold": true},
+              {"text": "Lymphopenia occurred in most TZIELD-treated patients. For most patients, lymphocyte levels began to recover after the fifth day of treatment and returned to pretreatment values within two weeks after treatment completion and without dose interruption. Monitor white blood cell counts during the treatment period. If prolonged severe lymphopenia develops (<500 cells per mcL lasting 1 week or longer), discontinue TZIELD."}
+            ]},
+            {"content": [
+              {"text": "Hypersensitivity Reactions:", "bold": true},
+              {"text": " Acute hypersensitivity reactions including serum sickness, angioedema, urticaria, rash, vomiting and bronchospasm occurred in TZIELD-treated patients. If severe hypersensitivity reactions occur, discontinue TZIELD and treat promptly."}
+            ]},
+            {"content": [
+              {"text": "Vaccinations: ", "bold": true},
+              {"text": "The safety of immunization with live-attenuated (live) vaccines with TZIELD-treated patients has not been studied. TZIELD may interfere with immune response to vaccination and decrease vaccine efficacy. Administer all age-appropriate vaccinations prior to starting TZIELD.\n- Administer live vaccines at least 8 weeks prior to treatment. Live vaccines are not recommended during treatment, or up to 52 weeks after treatment.\n- Administer inactivated (killed) vaccines or mRNA vaccines at least 2 weeks prior to treatment. Inactivated vaccines are not recommended within 2 weeks prior to any TZIELD treatment course, during treatment, or 6 weeks after completion of treatment."}
+            ]},
+            {"content": [
+              {"text": "Glucose Monitoring in Patients Recently Diagnosed with Stage 3 T1D: ", "bold": true},
+              {"text": "Patients using insulin should be monitored according to current practice guidelines."}
+            ]}
+          ]
+        },
+        {
+          "type": "textBlock",
+          "content": [{"text": "ADVERSE REACTIONS"}],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "fontWeight": "bold",
+          "color": "#414042",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 0, "bottom": 12, "left": 0}
+        },
+        {
+          "type": "textBlock",
+          "content": [{"text": "Most common adverse reactions (>10%) were lymphopenia, rash, leukopenia, neutropenia, increased liver transaminase, and headache."}],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#414042",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 0, "bottom": 12, "left": 0}
+        },
+        {
+          "type": "textBlock",
+          "content": [{"text": "USE IN SPECIFIC POPULATIONS"}],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "fontWeight": "bold",
+          "color": "#414042",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 0, "bottom": 12, "left": 0}
+        },
+        {
+          "type": "list",
+          "style": "bullet",
+          "indent": 24,
+          "bulletColor": "#414042",
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#414042",
+          "itemSpacing": 0,
+          "padding": {"top": 0, "right": 0, "bottom": 12, "left": 0},
+          "items": [
+            {"content": [
+              {"text": "Pregnancy:", "bold": true},
+              {"text": " May cause fetal harm."}
+            ]},
+            {"content": [
+              {"text": "Lactation:", "bold": true},
+              {"text": " A lactating woman may consider pumping and discarding breast milk during and for 20 days after TZIELD administration."}
+            ]}
+          ]
+        },
+        {
+          "type": "textBlock",
+          "content": [
+            {"text": "Please see full "},
+            {"text": "Prescribing Information", "underline": true, "color": "#0023C8", "link": {"href": "#", "alias": "isi-prescribing-information"}},
+            {"text": ", including patient selection criteria."}
+          ],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#414042",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 0, "bottom": 12, "left": 0}
+        },
+        {
+          "type": "textBlock",
+          "content": [
+            {"text": "Click here", "underline": true, "color": "#0023C8", "link": {"href": "#", "alias": "isi-counterfeit-drugs"}},
+            {"text": " to learn more about Sanofi’s commitment to fighting counterfeit drugs."}
+          ],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#414042",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 0, "bottom": 0, "left": 0}
+        }
+      ]
+    },
+    {
+      "id": "section-12",
+      "name": "FOOTER MODULE — References",
+      "figmaNodeId": "40000030:432",
+      "padding": {"top": 12, "right": 24, "bottom": 12, "left": 24},
+      "nodes": [
+        {
+          "type": "textBlock",
+          "content": [{"text": "References:"}],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "fontWeight": "bold",
+          "color": "#414042",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 0, "bottom": 12, "left": 0}
+        },
+        {
+          "type": "list",
+          "style": "numbered",
+          "indent": 24,
+          "bulletColor": "#414042",
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#414042",
+          "itemSpacing": 12,
+          "padding": {"top": 0, "right": 0, "bottom": 0, "left": 0},
+          "items": [
+            {"content": [
+              {"text": "TZIELD Prescribing Information. Provention Bio, Inc; "},
+              {"text": "["},
+              {"text": "2025."},
+              {"text": "]"}
+            ]},
+            {"content": [
+              {"text": "["},
+              {"text": "Press release pending"},
+              {"text": "]"}
+            ]}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "section-13",
+      "name": "FOOTER MODULE — CXQ",
+      "figmaNodeId": "40000030:433",
+      "background": "#F2F2F2",
+      "outerPadding": {"top": 12, "right": 0, "bottom": 12, "left": 0},
+      "padding": {"top": 24, "right": 24, "bottom": 24, "left": 24},
+      "nodes": [
+        {
+          "type": "textBlock",
+          "content": [{"text": "Your feedback is important to us. To help us improve our offering, you are invited to respond to the question below and complete a short survey."}],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#414042",
+          "alignment": "center",
+          "padding": {"top": 0, "right": 0, "bottom": 16, "left": 0}
+        },
+        {
+          "type": "textBlock",
+          "content": [{"text": "How relevant is the content of this email to you?"}],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 19,
+          "lineHeight": 22,
+          "fontWeight": "bold",
+          "color": "#000000",
+          "alignment": "center",
+          "padding": {"top": 0, "right": 0, "bottom": 16, "left": 0}
+        },
+        {
+          "type": "multiColumn",
+          "alignment": "left",
+          "verticalAlignment": "top",
+          "mobileLayout": "preserve",
+          "columns": [
+            {
+              "id": "cxq-label-not",
+              "width": "50%",
+              "alignment": "left",
+              "padding": {"top": 0, "right": 0, "bottom": 0, "left": 0},
+              "content": {
+                "type": "textBlock",
+                "content": [{"text": "Not relevant"}],
+                "fontFamily": "Arial, Helvetica, sans-serif",
+                "fontSize": 19,
+                "lineHeight": 22,
+                "fontWeight": "bold",
+                "color": "#000000",
+                "alignment": "left"
+              },
+              "mobile": {"preserveWidth": false, "alignment": "left"}
+            },
+            {
+              "id": "cxq-label-very",
+              "width": "50%",
+              "alignment": "right",
+              "padding": {"top": 0, "right": 0, "bottom": 0, "left": 0},
+              "content": {
+                "type": "textBlock",
+                "content": [{"text": "Very relevant"}],
+                "fontFamily": "Arial, Helvetica, sans-serif",
+                "fontSize": 19,
+                "lineHeight": 22,
+                "fontWeight": "bold",
+                "color": "#000000",
+                "alignment": "right"
+              },
+              "mobile": {"preserveWidth": false, "alignment": "right"}
+            }
+          ],
+          "gaps": [
+            {"between": ["cxq-label-not", "cxq-label-very"], "desktop": 0, "mobile": 0, "direction": "auto"}
+          ]
+        },
+        {
+          "type": "spacer",
+          "height": 12,
+          "mobile": {"height": 12}
+        },
+        {
+          "type": "multiColumn",
+          "alignment": "center",
+          "verticalAlignment": "top",
+          "mobileLayout": "preserve",
+          "columns": [
+            {
+              "id": "cxq-rating-1",
+              "width": 72,
+              "height": 48,
+              "background": "#FFFFFF",
+              "border": {"top": 1, "right": 1, "bottom": 1, "left": 1, "color": "#707070"},
+              "alignment": "center",
+              "padding": {"top": 0, "right": 0, "bottom": 0, "left": 0},
+              "link": {"href": "#", "alias": "cxq-rating-1"},
+              "content": {
+                "type": "textBlock",
+                "content": [{"text": "1"}],
+                "fontFamily": "Arial, Helvetica, sans-serif",
+                "fontSize": 16,
+                "lineHeight": 48,
+                "fontWeight": "bold",
+                "color": "#000000",
+                "alignment": "center"
+              },
+              "mobile": {"preserveWidth": false, "width": 40, "height": 40, "alignment": "center"}
+            },
+            {
+              "id": "cxq-rating-2",
+              "width": 72,
+              "height": 48,
+              "background": "#979797",
+              "border": {"top": 1, "right": 1, "bottom": 1, "left": 1, "color": "#979797"},
+              "alignment": "center",
+              "padding": {"top": 0, "right": 0, "bottom": 0, "left": 0},
+              "link": {"href": "#", "alias": "cxq-rating-2"},
+              "content": {
+                "type": "textBlock",
+                "content": [{"text": "2"}],
+                "fontFamily": "Arial, Helvetica, sans-serif",
+                "fontSize": 16,
+                "lineHeight": 48,
+                "fontWeight": "bold",
+                "color": "#FFFFFF",
+                "alignment": "center"
+              },
+              "mobile": {"preserveWidth": false, "width": 40, "height": 40, "alignment": "center"}
+            },
+            {
+              "id": "cxq-rating-3",
+              "width": 72,
+              "height": 48,
+              "background": "#FFFFFF",
+              "border": {"top": 1, "right": 1, "bottom": 1, "left": 1, "color": "#707070"},
+              "alignment": "center",
+              "padding": {"top": 0, "right": 0, "bottom": 0, "left": 0},
+              "link": {"href": "#", "alias": "cxq-rating-3"},
+              "content": {
+                "type": "textBlock",
+                "content": [{"text": "3"}],
+                "fontFamily": "Arial, Helvetica, sans-serif",
+                "fontSize": 16,
+                "lineHeight": 48,
+                "fontWeight": "bold",
+                "color": "#000000",
+                "alignment": "center"
+              },
+              "mobile": {"preserveWidth": false, "width": 40, "height": 40, "alignment": "center"}
+            },
+            {
+              "id": "cxq-rating-4",
+              "width": 72,
+              "height": 48,
+              "background": "#FFFFFF",
+              "border": {"top": 1, "right": 1, "bottom": 1, "left": 1, "color": "#707070"},
+              "alignment": "center",
+              "padding": {"top": 0, "right": 0, "bottom": 0, "left": 0},
+              "link": {"href": "#", "alias": "cxq-rating-4"},
+              "content": {
+                "type": "textBlock",
+                "content": [{"text": "4"}],
+                "fontFamily": "Arial, Helvetica, sans-serif",
+                "fontSize": 16,
+                "lineHeight": 48,
+                "fontWeight": "bold",
+                "color": "#000000",
+                "alignment": "center"
+              },
+              "mobile": {"preserveWidth": false, "width": 40, "height": 40, "alignment": "center"}
+            },
+            {
+              "id": "cxq-rating-5",
+              "width": 72,
+              "height": 48,
+              "background": "#FFFFFF",
+              "border": {"top": 1, "right": 1, "bottom": 1, "left": 1, "color": "#707070"},
+              "alignment": "center",
+              "padding": {"top": 0, "right": 0, "bottom": 0, "left": 0},
+              "link": {"href": "#", "alias": "cxq-rating-5"},
+              "content": {
+                "type": "textBlock",
+                "content": [{"text": "5"}],
+                "fontFamily": "Arial, Helvetica, sans-serif",
+                "fontSize": 16,
+                "lineHeight": 48,
+                "fontWeight": "bold",
+                "color": "#000000",
+                "alignment": "center"
+              },
+              "mobile": {"preserveWidth": false, "width": 40, "height": 40, "alignment": "center"}
+            },
+            {
+              "id": "cxq-rating-6",
+              "width": 72,
+              "height": 48,
+              "background": "#FFFFFF",
+              "border": {"top": 1, "right": 1, "bottom": 1, "left": 1, "color": "#707070"},
+              "alignment": "center",
+              "padding": {"top": 0, "right": 0, "bottom": 0, "left": 0},
+              "link": {"href": "#", "alias": "cxq-rating-6"},
+              "content": {
+                "type": "textBlock",
+                "content": [{"text": "6"}],
+                "fontFamily": "Arial, Helvetica, sans-serif",
+                "fontSize": 16,
+                "lineHeight": 48,
+                "fontWeight": "bold",
+                "color": "#000000",
+                "alignment": "center"
+              },
+              "mobile": {"preserveWidth": false, "width": 40, "height": 40, "alignment": "center"}
+            },
+            {
+              "id": "cxq-rating-7",
+              "width": 72,
+              "height": 48,
+              "background": "#FFFFFF",
+              "border": {"top": 1, "right": 1, "bottom": 1, "left": 1, "color": "#707070"},
+              "alignment": "center",
+              "padding": {"top": 0, "right": 0, "bottom": 0, "left": 0},
+              "link": {"href": "#", "alias": "cxq-rating-7"},
+              "content": {
+                "type": "textBlock",
+                "content": [{"text": "7"}],
+                "fontFamily": "Arial, Helvetica, sans-serif",
+                "fontSize": 16,
+                "lineHeight": 48,
+                "fontWeight": "bold",
+                "color": "#000000",
+                "alignment": "center"
+              },
+              "mobile": {"preserveWidth": false, "width": 40, "height": 40, "alignment": "center"}
+            }
+          ],
+          "gaps": [
+            {"between": ["cxq-rating-1", "cxq-rating-2"], "desktop": 8, "mobile": 4, "direction": "horizontal"},
+            {"between": ["cxq-rating-2", "cxq-rating-3"], "desktop": 8, "mobile": 4, "direction": "horizontal"},
+            {"between": ["cxq-rating-3", "cxq-rating-4"], "desktop": 8, "mobile": 4, "direction": "horizontal"},
+            {"between": ["cxq-rating-4", "cxq-rating-5"], "desktop": 8, "mobile": 4, "direction": "horizontal"},
+            {"between": ["cxq-rating-5", "cxq-rating-6"], "desktop": 8, "mobile": 4, "direction": "horizontal"},
+            {"between": ["cxq-rating-6", "cxq-rating-7"], "desktop": 8, "mobile": 4, "direction": "horizontal"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "section-14",
+      "name": "FOOTER MODULE — Legal footer",
+      "figmaNodeId": "40000030:434",
+      "padding": {"top": 12, "right": 24, "bottom": 12, "left": 24},
+      "nodes": [
+        {
+          "type": "textBlock",
+          "content": [
+            {"text": "Prescribers and other Healthcare Professionals may "},
+            {"text": "click here", "underline": true, "color": "#0023C8", "link": {"href": "#", "alias": "footer-state-price-disclosure"}},
+            {"text": " for State Price Disclosure Information."}
+          ],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 21,
+          "color": "#000000",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 0, "bottom": 0, "left": 0}
+        },
+        {
+          "type": "textBlock",
+          "content": [
+            {"text": "Please do not reply to this message.", "bold": true},
+            {"text": " Sanofi US will not receive a message if you reply."}
+          ],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 21,
+          "color": "#000000",
+          "alignment": "left",
+          "padding": {"top": 16, "right": 0, "bottom": 0, "left": 0}
+        },
+        {
+          "type": "image",
+          "src": "https://www.figma.com/api/mcp/asset/cc8a73f5-fac0-4ae0-8013-9bfe7dc5ddd4",
+          "alt": "",
+          "width": 88,
+          "height": 24,
+          "decorative": true,
+          "alignment": "center",
+          "padding": {"top": 16, "right": 0, "bottom": 14, "left": 0},
+          "mobile": {"preserveWidth": true, "alignment": "center"}
+        },
+        {
+          "type": "textBlock",
+          "content": [
+            {"text": "Sanofi US\n100 Morris Street,\nMorristown, NJ 07960"}
+          ],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#000000",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 0, "bottom": 16, "left": 0}
+        },
+        {
+          "type": "textBlock",
+          "content": [{"text": "© 2026 Sanofi. All rights reserved."}],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#000000",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 0, "bottom": 12, "left": 0}
+        },
+        {
+          "type": "textBlock",
+          "content": [
+            {"text": "Legal Disclaimer", "underline": true, "color": "#0023C8", "link": {"href": "#", "alias": "footer-legal-disclaimer"}},
+            {"text": " and "},
+            {"text": "Privacy Policy", "underline": true, "color": "#0023C8", "link": {"href": "#", "alias": "footer-privacy-policy"}}
+          ],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#000000",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 0, "bottom": 12, "left": 0}
+        },
+        {
+          "type": "textBlock",
+          "content": [
+            {"text": "Questions and Comments? "},
+            {"text": "Click here", "underline": true, "color": "#0023C8", "link": {"href": "#", "alias": "footer-questions-comments"}},
+            {"text": " to contact us."}
+          ],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#000000",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 0, "bottom": 12, "left": 0}
+        },
+        {
+          "type": "textBlock",
+          "content": [{"text": "This email is intended for use by US residents only."}],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#000000",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 0, "bottom": 12, "left": 0}
+        },
+        {
+          "type": "textBlock",
+          "content": [
+            {"text": "You may unsubscribe from Sanofi by "},
+            {"text": "clicking here", "underline": true, "color": "#0023C8", "link": {"href": "#", "alias": "footer-unsubscribe"}},
+            {"text": " or calling 1-800-633-1610."}
+          ],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#000000",
+          "alignment": "left",
+          "padding": {"top": 0, "right": 0, "bottom": 0, "left": 0}
+        },
+        {
+          "type": "textBlock",
+          "content": [{"text": "MAT-US-2510989-v1.0-10/2025"}],
+          "fontFamily": "Arial, Helvetica, sans-serif",
+          "fontSize": 16,
+          "lineHeight": 20,
+          "color": "#414042",
+          "alignment": "left",
+          "padding": {"top": 16, "right": 0, "bottom": 0, "left": 0}
+        }
+      ]
+    }
+  ]
+}
