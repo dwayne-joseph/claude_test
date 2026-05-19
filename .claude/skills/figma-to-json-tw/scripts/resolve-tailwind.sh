@@ -13,27 +13,46 @@
 #   <jsx-directory>/decoded.css       — the Tailwind-resolved stylesheet
 #   <jsx-directory>/*.inlined.jsx     — one inlined JSX file per input JSX
 #
-# Hard-codes the path to Tailwind v3.4 inside @mermaid-js/mermaid-cli's node_modules.
-# This is intentional: the figma-to-json-tw skill assumes the Claude chat environment
-# where this dependency is reliably present. If it disappears, this script fails
-# loudly and the skill cannot proceed.
+# Resolves Tailwind in this order:
+#   1. TAILWIND_CLI env var (caller override)
+#   2. The web-Claude bundled path (mermaid-cli's tailwindcss)
+#   3. `tailwindcss` on PATH
+#   4. `npx -y tailwindcss@3.4` (Claude Code local fallback)
+# Exits non-zero only if none of the above work.
 
 set -euo pipefail
 
 # ----------------------------------------------------------------------------
 # Locate Tailwind
 # ----------------------------------------------------------------------------
-TAILWIND_CLI="/home/claude/.npm-global/lib/node_modules/@mermaid-js/mermaid-cli/node_modules/tailwindcss/lib/cli.js"
+WEB_CLAUDE_TAILWIND="/home/claude/.npm-global/lib/node_modules/@mermaid-js/mermaid-cli/node_modules/tailwindcss/lib/cli.js"
 
-if [ ! -f "$TAILWIND_CLI" ]; then
+# TW_RUN is an array — the command + leading args to invoke Tailwind. The caller
+# appends -c/-i/-o/--no-autoprefixer at the call site.
+TW_RUN=()
+
+if [ -n "${TAILWIND_CLI:-}" ] && [ -f "$TAILWIND_CLI" ]; then
+  TW_RUN=(node "$TAILWIND_CLI")
+  echo ">>> using TAILWIND_CLI override: $TAILWIND_CLI" >&2
+elif [ -f "$WEB_CLAUDE_TAILWIND" ]; then
+  TW_RUN=(node "$WEB_CLAUDE_TAILWIND")
+  echo ">>> using bundled Tailwind: $WEB_CLAUDE_TAILWIND" >&2
+elif command -v tailwindcss >/dev/null 2>&1; then
+  TW_RUN=(tailwindcss)
+  echo ">>> using tailwindcss on PATH" >&2
+elif command -v npx >/dev/null 2>&1; then
+  TW_RUN=(npx -y tailwindcss@3.4)
+  echo ">>> using npx tailwindcss@3.4 (will download on first run)" >&2
+else
   cat >&2 <<EOF
 
-ERROR: Tailwind CLI not found at the expected path:
-  $TAILWIND_CLI
+ERROR: Tailwind CLI not available. Tried:
+  1. \$TAILWIND_CLI env var (not set or file missing)
+  2. $WEB_CLAUDE_TAILWIND (not found)
+  3. tailwindcss on PATH (not found)
+  4. npx (not found)
 
-The figma-to-json-tw skill depends on the Tailwind binary bundled with
-@mermaid-js/mermaid-cli in this environment. If that dependency has been
-removed or moved, this skill cannot run.
+Install one of: npm i -g tailwindcss@3.4, or ensure npx is on PATH.
 
 EOF
   exit 1
@@ -104,7 +123,7 @@ echo "@tailwind utilities;" > "$TMPDIR/input.css"
 CSS_OUT="$JSX_DIR/decoded.css"
 
 echo ">>> running Tailwind CLI over ${#JSX_FILES[@]} JSX file(s)..." >&2
-node "$TAILWIND_CLI" \
+"${TW_RUN[@]}" \
   -c "$TMPDIR/tailwind.config.js" \
   -i "$TMPDIR/input.css" \
   -o "$CSS_OUT" \
